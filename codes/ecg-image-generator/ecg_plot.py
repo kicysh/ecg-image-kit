@@ -348,6 +348,12 @@ def ecg_plot(
             st = start_index + int(2*sample_rate*configs['paper_len']/columns)
         elif columns == 4 and leadName in configs['format_4_by_3'][3]:
             st = start_index + int(3*sample_rate*configs['paper_len']/columns)
+          
+        if columns == 6 and leadName in configs['format_6_by_2'][1]:
+            st = start_index + int(sample_rate*configs['paper_len']/columns)
+        elif columns == 6 and leadName in configs['format_6_by_2'][2]:
+            st = start_index + int(2*sample_rate*configs['paper_len']/columns)
+          
         current_lead_ds["start_sample"] = st
         current_lead_ds["end_sample"]= st + len(ecg[leadName])
         current_lead_ds["plotted_pixels"] = []
