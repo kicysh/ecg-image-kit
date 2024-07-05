@@ -341,19 +341,15 @@ def ecg_plot(
             box_dict[3] = [round(json_dict['height'] - y1, 2), round(x1, 2)]
             current_lead_ds["lead_bounding_box"] = box_dict
         
-        st = start_index
-        if columns == 4 and leadName in configs['format_4_by_3'][1]:
-            st = start_index + int(sample_rate*configs['paper_len']/columns)
-        elif columns == 4 and leadName in configs['format_4_by_3'][2]:
-            st = start_index + int(2*sample_rate*configs['paper_len']/columns)
-        elif columns == 4 and leadName in configs['format_4_by_3'][3]:
-            st = start_index + int(3*sample_rate*configs['paper_len']/columns)
-          
-        if columns == 6 and leadName in configs['format_6_by_2'][1]:
-            st = start_index + int(sample_rate*configs['paper_len']/columns)
-        elif columns == 6 and leadName in configs['format_6_by_2'][2]:
-            st = start_index + int(2*sample_rate*configs['paper_len']/columns)
-          
+        st, add_st = start_index, 0
+        configs_format_by = {4:'format_4_by_3', 6:'format_6_by_2'}
+        if columns in configs_format_by.keys():
+            format_by_name = configs_format_by[columns]
+            for _i, _v in enumerate(configs[format_by_name]):
+                if leadName in _v:
+                    add_st = int(_i*sample_rate*configs['paper_len']/columns)
+        st = st + add_st
+                
         current_lead_ds["start_sample"] = st
         current_lead_ds["end_sample"]= st + len(ecg[leadName])
         current_lead_ds["plotted_pixels"] = []
