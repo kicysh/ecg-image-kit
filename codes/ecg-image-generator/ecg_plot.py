@@ -482,11 +482,11 @@ def ecg_plot(
                 ax.text(x_offset, y_offset, line, fontsize=lead_fontsize)
                 y_offset -= 0.5
 
-    #change x and y res
-    ax.text(2, 0.5, '25mm/s', fontsize=lead_fontsize)
-    ax.text(4, 0.5, '10mm/mV', fontsize=lead_fontsize)
-    
     if(show_grid):
+        #change x and y res
+        ax.text(2, 0.5, '25mm/s', fontsize=lead_fontsize)
+        ax.text(4, 0.5, '10mm/mV', fontsize=lead_fontsize)
+
         ax.set_xticks(np.arange(x_min,x_max,x_grid_size))    
         ax.set_yticks(np.arange(y_min,y_max,y_grid_size))
         ax.minorticks_on()
