@@ -54,7 +54,9 @@ def get_paper_ecg(input_file,header_file,output_directory, seed, add_dc_pulse,ad
             
     elif(len(full_leads)==12):
         gen_m = 12
-        if full_mode not in full_leads:
+        if full_mode.strip().rstrip() == 'None':
+            full_mode = 'None'
+        elif full_mode not in full_leads:
             full_mode = full_leads[0]
         else:
             full_mode = full_mode
