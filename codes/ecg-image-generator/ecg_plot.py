@@ -342,7 +342,7 @@ def ecg_plot(
             current_lead_ds["lead_bounding_box"] = box_dict
         
         st, add_st = start_index, 0
-        configs_format_by = {4:'format_4_by_3', 6:'format_6_by_2'}
+        configs_format_by = {4:'format_4_by_3', 2:'format_2_by_6'}
         if columns in configs_format_by.keys():
             format_by_name = configs_format_by[columns]
             for _i, _v in enumerate(configs[format_by_name]):
