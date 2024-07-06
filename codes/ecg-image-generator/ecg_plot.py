@@ -124,6 +124,9 @@ def ecg_plot(
 
     rows  = int(ceil(leads/columns))
 
+    _tmp = [lead_index[i::rows] for i in range(rows)][::-1]
+    lead_index = [_tmp_i_j for _tmp_i in _tmp for _tmp_i_j in _tmp_i]
+          
     if(full_mode!='None'):
         rows+=1
         leads+=1
@@ -228,11 +231,8 @@ def ecg_plot(
 
     for i in np.arange(len(lead_index)):
         current_lead_ds = dict()
-
-        if len(lead_index) == 12:
-            leadName = leadNames_12[i]
-        else:
-            leadName = lead_index[i]
+        leadName = lead_index[i]
+        
         #y_offset is computed by shifting by a certain offset based on i, and also by row_height/2 to account for half the waveform below the axis
         if(i%columns==0):
 
