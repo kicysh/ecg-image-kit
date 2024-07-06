@@ -79,9 +79,7 @@ def get_paper_ecg(input_file,header_file,output_directory, seed, add_dc_pulse,ad
     start = 0
     lead_length_in_seconds = configs['paper_len']/columns
     abs_lead_step = configs['abs_lead_step']
-    format_4_by_3 = configs['format_4_by_3']
-    format_6_by_2 = configs['format_6_by_2']
-    configs_format_by = {4:'format_4_by_3', 6:'format_6_by_2'}
+    configs_format_by = {4:'format_4_by_3', 2:'format_2_by_6'}
     
     segmented_ecg_data = {}
 
