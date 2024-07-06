@@ -192,9 +192,9 @@ def get_paper_ecg(input_file,header_file,output_directory, seed, add_dc_pulse,ad
                     shiftedStart = start
                     if columns in configs_format_by.keys():
                         format_by_name = configs_format_by[columns]
-                    for _i, _v in enumerate(configs[format_by_name]):
-                        if key in _v:
-                            shiftedStart = start + int(_i*rate*lead_length_in_seconds)
+                        for _i, _v in enumerate(configs[format_by_name]):
+                            if key in _v:
+                                shiftedStart = start + int(_i*rate*lead_length_in_seconds)
                     end = shiftedStart + int(rate*lead_length_in_seconds)
                     
                     if(key!='full'+full_mode):
@@ -207,11 +207,14 @@ def get_paper_ecg(input_file,header_file,output_directory, seed, add_dc_pulse,ad
                         else:
                             nanArray[:] = record_dict[key][start: shiftedStart]
 
-                        if columns == 4 and key not in format_4_by_3[0]:
-                            if key not in segmented_ecg_data.keys():
-                                segmented_ecg_data[key] = nanArray.tolist()
-                            else:
-                                segmented_ecg_data[key] = segmented_ecg_data[key] + nanArray.tolist()
+                        if columns in configs_format_by.keys():
+                            format_by_name = configs_format_by[columns]
+                            if key not in configs[format_by_name][0]:
+                                if key not in segmented_ecg_data.keys():
+                                    segmented_ecg_data[key] = nanArray.tolist()
+                                else:
+                                    segmented_ecg_data[key] = segmented_ecg_data[key] + nanArray.tolist()
+
                         if key not in segmented_ecg_data.keys():
                             segmented_ecg_data[key] = frame[key].tolist()
                         else:
