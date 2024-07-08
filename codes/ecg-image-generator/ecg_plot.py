@@ -234,9 +234,8 @@ def ecg_plot(
         leadName = lead_index[i]
         
         #y_offset is computed by shifting by a certain offset based on i, and also by row_height/2 to account for half the waveform below the axis
-        if(i%columns==0):
-
-            y_offset += row_height
+        #y_offset = (row_height/2) + row_height*(i//columns+1)
+        y_offset = (row_height/2) + row_height*(i//columns+1) - 0.5*(i%columns)
         
         #x_offset will be distance by which we shift the plot in each iteration
         if(columns>1):
@@ -365,7 +364,7 @@ def ecg_plot(
             sep_x = [len(ecg[leadName])*step + x_offset + dc_offset + x_gap] * round(8*y_grid_dots)
             sep_x = np.array(sep_x)
             sep_y = np.linspace(y_offset - 4*y_grid_dots*step, y_offset + 4*y_grid_dots*step, len(sep_x))
-            ax.plot(sep_x, sep_y, linewidth=line_width * 3, color=color_line)
+            #ax.plot(sep_x, sep_y, linewidth=line_width * 3, color=color_line)
 
     #Plotting longest lead for 12 seconds
     if(full_mode!='None'):
