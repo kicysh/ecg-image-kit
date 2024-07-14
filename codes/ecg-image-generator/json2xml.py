@@ -12,11 +12,11 @@ def set_xml(path):
     root = ET.Element("annotation")
     r_fo = ET.SubElement(root, "folder")
     dirname = os.path.dirname(path)
-    r_fo.text = dirname[dirname.rfind(os.sep)+1:]
+    r_fo.text = dirname[max(dirname.rfind(os.sep),dirname.rfind("/"))+1:]
     r_fi = ET.SubElement(root, "filenme")
     r_fi.text = os.path.basename(path)
     r_pa = ET.SubElement(root, "path")
-    r_pa.text = os.sep + r_fo.text + os.sep + f_fi.text
+    r_pa.text = "/" + r_fo.text + "/" + r_fi.text
     
     r_so = ET.SubElement(root, "source")
     so_da = ET.SubElement(r_so, "database")
@@ -24,13 +24,13 @@ def set_xml(path):
     
     r_si = ET.SubElement(root, "size")
     si_wi, si_he, si_de = ET.SubElement(r_si, "width"), ET.SubElement(r_si, "height"), ET.SubElement(r_si, "depth")
-    si_wi, si_he, si_de = str(json_load["width"]),str(json_load["height"]),"3"
+    si_wi.text, si_he.text, si_de.text = str(json_load["width"]),str(json_load["height"]),"3"
     
     r_se = ET.SubElement(root, "segment")
     r_se.text = '0'
 
     for lead in json_load["leads"]:
-        name_format = json_load["lead_name"]+ "_{}"
+        name_format = lead["lead_name"]+ "_{}"
         for _type in ["text","lead"]:
             r_ob = ET.SubElement(root, "object")
             ob_na = ET.SubElement(r_ob, "name")
@@ -51,10 +51,10 @@ def set_xml(path):
 
 
 def main(root_path):
-    paths = glob.glob(os.path.join(root_path,"*.json"))
+    paths = glob.glob(root_path+"*.json")
     for path in paths:
         root_xml = set_xml(path)
-        xml_path = os.path.splitext(path).split(".")[0] + ".xml"
+        doc = minidom.parseString(ET.tostring(root_xml, 'utf-8'))
+        xml_path = os.path.splitext(path)[0] + ".xml"
         with open(xml_path, "w") as f:
-            root_xml.writexml(f, encoding='utf-8', newl='\n', indent='', addindent='  ')
-            
+            doc.writexml(f, encoding='utf-8', newl='\n', indent='', addindent='  ')
