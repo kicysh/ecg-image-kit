@@ -46,7 +46,7 @@ def set_xml(path):
             bn_xmax = ET.SubElement(ob_bn, "xmax")
             bn_ymax = ET.SubElement(ob_bn, "ymax")
             bbox = lead[_type+"_bounding_box"]["0"] + lead[_type+"_bounding_box"]["2"]
-            bn_xmin.text, bn_ymin.text, bn_xmax.text, bn_ymax.text = [str(i) for i in bbox]
+            bn_ymin.text, bn_xmin.text, bn_ymax.text, bn_xmax.text = [str(i) for i in bbox]
     return root
 
 
