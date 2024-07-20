@@ -5,6 +5,7 @@ import inspect
 import matplotlib.pyplot as plt
 import matplotlib
 from matplotlib.ticker import AutoMinorLocator
+from matplotlib import font_manager as fm
 from TemplateFiles.generate_template import generate_template
 from math import ceil 
 from PIL import Image
@@ -70,9 +71,13 @@ CONFIGS_KEYS = ["sample_rate", "columns", "rec_file_name", "output_dir",
                 "resolution", "pad_inches","lead_index", "full_mode",
                 "store_text_bbox","full_header_file","show_grid", "papersize",
                 "x_gap","y_gap", "line_width", "title", "start_plot_xy_delta_dict",
-                "start_plot_xy_delta_from_json"]
+                "start_plot_xy_delta_from_json", "is_random_start_plot_xy_delta",
+                "is_random_start_text_plot_xy_delta", "is_random_text_rotation",
+                "is_random_font"]
 
 CONFIGS_FORMAT_BY = {4:'format_4_by_3', 2:'format_2_by_6'}
+
+FONT_NAME = [fm.FontProperties(fname=x).get_name() for x in fm.findSystemFonts()]
 
 def inches_to_dots(value,resolution):
     return (value * resolution)
@@ -128,6 +133,10 @@ def _ecg_plot(
         store_configs=0,
         lead_length_in_seconds=10,
         start_plot_xy_delta_dict = None,
+        is_random_start_plot_xy_delta = False,
+        is_random_start_text_plot_xy_delta = False,
+        is_random_text_rotation=False,
+        is_random_font=False,
         **kwargs
         ):
     '''
@@ -161,12 +170,6 @@ def _ecg_plot(
     leads = len(lead_index)
     rows  = int(ceil(leads/columns))
 
-    if start_plot_xy_delta_dict == None:
-        start_plot_xy_delta_dict = START_PLOT_XY_DELTA_DICT
-    else:
-        for k,v in START_PLOT_XY_DELTA_DICT.items():
-            start_plot_xy_delta_dict.setdefault(k,v)
-
     _tmp = [lead_index[i::rows] for i in range(rows)][::-1]
     lead_index = [_tmp_i_j for _tmp_i in _tmp for _tmp_i_j in _tmp_i]
           
@@ -182,8 +185,7 @@ def _ecg_plot(
     grid_line_width = standard_values['grid_line_width']
     lead_name_offset = standard_values['lead_name_offset']
     lead_fontsize = standard_values['lead_fontsize']
-
-
+    
     #Set max and min coordinates to mark grid. Offset x_max slightly (i.e by 1 column width)
     if papersize=='':
         width = standard_values['width']
@@ -191,7 +193,7 @@ def _ecg_plot(
     else:
         width = papersize_values[papersize][1]
         height = papersize_values[papersize][0]
-    
+
     y_grid = standard_values['y_grid_inch'] 
     x_grid = standard_values['x_grid_inch']
     y_grid_dots = y_grid*resolution
@@ -209,7 +211,13 @@ def _ecg_plot(
     json_dict['height'] = int(height*resolution)
     #Set figure and subplot sizes
     fig, ax = plt.subplots(figsize=(width, height), dpi=resolution)
-   
+
+    if start_plot_xy_delta_dict == None:
+        start_plot_xy_delta_dict = START_PLOT_XY_DELTA_DICT
+    else:
+        for k,v in START_PLOT_XY_DELTA_DICT.items():
+            start_plot_xy_delta_dict.setdefault(k,v)
+ 
     fig.subplots_adjust(
         hspace = 0, 
         wspace = 0,
@@ -290,10 +298,12 @@ def _ecg_plot(
 
         #Print lead name at .5 ( or 5 mm distance) from plot
         if(show_lead_name):
-            t1 = ax.text(x_offset + x_gap + dc_offset, 
-                    y_offset-lead_name_offset - 0.2, 
+            t1 = ax.text(x_offset + x_gap + dc_offset if not is_random_start_text_plot_xy_delta else random.uniform(0.1,width), 
+                    y_offset-lead_name_offset - 0.2 if not is_random_start_text_plot_xy_delta else random.uniform(0.1,height*2), 
                     leadName, 
-                    fontsize=lead_fontsize)
+                    rotation=0 if not is_random_text_rotation else random.uniform(-30,30),
+                    fontsize=lead_fontsize,
+                    fontname=FONT_NAME[0] if not is_random_font else random.choice(FONT_NAME))
             
             if (store_text_bbox):
                 renderer1 = fig.canvas.get_renderer()
@@ -351,9 +361,11 @@ def _ecg_plot(
         x_delta, y_delta = start_plot_xy_delta_dict[leadName]
         x_delta = x_offset + dc_offset + x_gap if x_delta in (None,"None") else x_delta
         y_delta = y_offset if y_delta in (None,"None") else y_delta
+        if is_random_start_plot_xy_delta:
+            x_delta = x_offset + dc_offset + x_gap + random.uniform(-2,2)
+            y_delta = y_offset + random.uniform(-2,2)
         x_vals = np.arange(0,len(ecg[leadName])*step,step) + x_delta
         y_vals = ecg[leadName] + y_delta
-
         t1 = ax.plot(x_vals, y_vals, linewidth=line_width, color=color_line) # plot ecg signal
         current_lead_ds["start_plot_xy_delta"] = [x_delta, y_delta]
         
@@ -606,6 +618,10 @@ def ecg_plot(ecg,
         store_configs=0,
         lead_length_in_seconds=10,
         start_plot_xy_delta_dict=None,
+        is_random_start_plot_xy_delta=False,
+        is_random_start_text_plot_xy_delta=False,
+        is_random_text_rotation=False,
+        is_random_font=False,
         **kwargs
         ):
     _d = get_params_from_configs(configs)
@@ -642,4 +658,8 @@ def ecg_plot(ecg,
     _d.setdefault("store_configs", store_configs)
     _d.setdefault("lead_length_in_seconds", lead_length_in_seconds)
     _d.setdefault("start_plot_xy_delta_dict", start_plot_xy_delta_dict)
+    _d.setdefault("is_random_start_plot_xy_delta", is_random_start_plot_xy_delta)
+    _d.setdefault("is_random_start_text_plot_xy_delta", is_random_start_text_plot_xy_delta)
+    _d.setdefault("is_random_text_rotation", is_random_text_rotation)
+    _d.setdefault("is_random_font", is_random_font)
     return _ecg_plot(**_d)
