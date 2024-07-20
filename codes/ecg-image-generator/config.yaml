@@ -5,6 +5,11 @@ leadNames_12: ["III", 'aVF', 'V3', 'V6', 'II', 'aVL', 'V2', 'V5', 'I', 'aVR', 'V
 format_2_by_6: [["I", "II", "III","aVR", "aVL", "aVF", "AVR", "AVL", "AVF"], ["V1", "V2", "V3","V4", "V5", "V6"]]
 #start_plot_xy_delta_dict: {"III": [None, None], 'aVF':[None, None], 'V3':[None, None], 'V6':[None, None], 'II':[None, None], 'aVL':[None, None], 'V2':[None, None], 'V5':[None, None], 'I':[None, None], 'aVR':[None, None], 'V1':[None, None], 'V4':[None, None]}
 #start_plot_xy_delta_from_json: True
+#is_random_start_plot_xy_delta: True
+#is_random_start_text_plot_xy_delta: True
+#is_random_text_rotation: True
+#is_random_font: True
+#not_show_leads: ["I", "II", "III","aVR", "aVL", "aVF", "AVR", "AVL", "AVF", "V1", "V2", "V3","V4", "V5", "V6"]
 #sample_rate: 100 #int
 #rec_file_name:  #str
 #output_dir: #str
