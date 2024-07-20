@@ -73,7 +73,7 @@ CONFIGS_KEYS = ["sample_rate", "columns", "rec_file_name", "output_dir",
                 "x_gap","y_gap", "line_width", "title", "start_plot_xy_delta_dict",
                 "start_plot_xy_delta_from_json", "is_random_start_plot_xy_delta",
                 "is_random_start_text_plot_xy_delta", "is_random_text_rotation",
-                "is_random_font"]
+                "is_random_font", "not_show_leads"]
 
 CONFIGS_FORMAT_BY = {4:'format_4_by_3', 2:'format_2_by_6'}
 
@@ -137,6 +137,7 @@ def _ecg_plot(
         is_random_start_text_plot_xy_delta = False,
         is_random_text_rotation=False,
         is_random_font=False,
+        not_show_leads=[],
         **kwargs
         ):
     '''
@@ -280,6 +281,8 @@ def _ecg_plot(
     for i in np.arange(len(lead_index)):
         current_lead_ds = dict()
         leadName = lead_index[i]
+        if leadName in not_show_leads:
+            continue
         
         #y_offset is computed by shifting by a certain offset based on i, and also by row_height/2 to account for half the waveform below the axis
         #y_offset = (row_height/2) + row_height*(i//columns+1)
@@ -622,6 +625,7 @@ def ecg_plot(ecg,
         is_random_start_text_plot_xy_delta=False,
         is_random_text_rotation=False,
         is_random_font=False,
+        not_show_leads=[],
         **kwargs
         ):
     _d = get_params_from_configs(configs)
@@ -662,4 +666,5 @@ def ecg_plot(ecg,
     _d.setdefault("is_random_start_text_plot_xy_delta", is_random_start_text_plot_xy_delta)
     _d.setdefault("is_random_text_rotation", is_random_text_rotation)
     _d.setdefault("is_random_font", is_random_font)
+    _d.setdefault("not_show_leads", not_show_leads)
     return _ecg_plot(**_d)
