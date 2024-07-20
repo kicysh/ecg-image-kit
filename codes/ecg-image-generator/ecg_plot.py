@@ -1,6 +1,7 @@
 import os
 import numpy as np
 import random
+import inspect
 import matplotlib.pyplot as plt
 import matplotlib
 from matplotlib.ticker import AutoMinorLocator
@@ -51,14 +52,48 @@ papersize_values = {'A0' : (33.1,46.8),
                     'letter' : (8.5,11)
                     }
 
+START_PLOT_XY_DELTA_DICT = {"I":[None, None],
+                            "II":[None, None],
+                            "III":[None, None],
+                            "aVF":[None, None], 
+                            "aVL":[None, None],
+                            "aVR":[None, None],
+                            "V1":[None, None],
+                            "V2":[None, None],
+                            "V3":[None, None],
+                            "V4":[None, None],
+                            "V5":[None, None],
+                            "V6":[None, None],
+                            "full_mode":[None, None]}
+
+CONFIGS_KEYS = ["sample_rate", "columns", "rec_file_name", "output_dir", 
+                "resolution", "pad_inches","lead_index", "full_mode",
+                "store_text_bbox","full_header_file","show_grid", "papersize",
+                "x_gap","y_gap", "line_width", "title", "start_plot_xy_delta_dict",
+                "start_plot_xy_delta_from_json"]
+
+CONFIGS_FORMAT_BY = {4:'format_4_by_3', 2:'format_2_by_6'}
 
 def inches_to_dots(value,resolution):
     return (value * resolution)
 
+
+def get_params_from_configs(configs):
+    _d = {}
+    for k in CONFIGS_KEYS:
+        if configs.get(k) != None:
+            _d[k] = configs.get(k)
+    _d["configs_leads_format"] = {}
+    for v in CONFIGS_FORMAT_BY.values():
+        _d["configs_leads_format"][v] = configs[v]
+    _d["configs_paper_len"] = configs["paper_len"]
+    return _d
+
+
 #Function to plot raw ecg signal
-def ecg_plot(
+def _ecg_plot(
         ecg, 
-        configs,
+        #configs,
         sample_rate, 
         columns,
         rec_file_name,
@@ -69,6 +104,8 @@ def ecg_plot(
         full_mode,
         store_text_bbox,
         full_header_file,
+        configs_leads_format,
+        configs_paper_len = 0,
         units          = '',
         papersize      = '',
         x_gap          = standard_values['x_gap'],
@@ -89,24 +126,26 @@ def ecg_plot(
         json_dict=dict(),
         start_index=-1,
         store_configs=0,
-        lead_length_in_seconds=10
+        lead_length_in_seconds=10,
+        start_plot_xy_delta_dict = None,
+        **kwargs
         ):
-    #Inputs :
-    #ecg - Dictionary of ecg signal with lead names as keys
-    #sample_rate - Sampling rate of the ecg signal
-    #lead_index - Order of lead indices to be plotted
-    #columns - Number of columns to be plotted in each row
-    #x_gap - gap between paper x axis border and signal plot
-    #y_gap - gap between paper y axis border and signal plot
-    #line_width - Width of line tracing the ecg
-    #title - Title of figure
-    #style - Black and white or colour
-    #row_height - gap between corresponding ecg rows
-    #show_lead_name - Option to show lead names or skip
-    #show_dc_pulse - Option to show dc pulse
-    #show_grid - Turn grid on or off
-
-
+    '''
+    params:
+        ecg - Dictionary of ecg signal with lead names as keys
+        sample_rate - Sampling rate of the ecg signal
+        lead_index - Order of lead indices to be plotted
+        columns - Number of columns to be plotted in each row
+        x_gap - gap between paper x axis border and signal plot
+        y_gap - gap between paper y axis border and signal plot
+        line_width - Width of line tracing the ecg
+        title - Title of figure
+        style - Black and white or colour
+        row_height - gap between corresponding ecg rows
+        show_lead_name - Option to show lead names or skip
+        show_dc_pulse - Option to show dc pulse
+        show_grid - Turn grid on or off
+    '''
     #Initialize some params
     #secs represents how many seconds of ecg are plotted
     #leads represent number of leads in the ecg
@@ -119,10 +158,14 @@ def ecg_plot(
         return 
 
     secs = lead_length_in_seconds
-
     leads = len(lead_index)
-
     rows  = int(ceil(leads/columns))
+
+    if start_plot_xy_delta_dict == None:
+        start_plot_xy_delta_dict = START_PLOT_XY_DELTA_DICT
+    else:
+        for k,v in START_PLOT_XY_DELTA_DICT.items():
+            start_plot_xy_delta_dict.setdefault(k,v)
 
     _tmp = [lead_index[i::rows] for i in range(rows)][::-1]
     lead_index = [_tmp_i_j for _tmp_i in _tmp for _tmp_i_j in _tmp_i]
@@ -142,7 +185,6 @@ def ecg_plot(
 
 
     #Set max and min coordinates to mark grid. Offset x_max slightly (i.e by 1 column width)
-
     if papersize=='':
         width = standard_values['width']
         height = standard_values['height']
@@ -237,8 +279,7 @@ def ecg_plot(
         
         #x_offset will be distance by which we shift the plot in each iteration
         if(columns>1):
-            x_offset = (i%columns)*secs
-            
+            x_offset = (i%columns)*secs  
         else:
             x_offset = 0
 
@@ -306,15 +347,16 @@ def ecg_plot(
                     bb = t1[0].get_window_extent()                                                
                     x1, y1 = bb.x0*resolution/fig.dpi, bb.y0*resolution/fig.dpi
                     x2, y2 = bb.x1*resolution/fig.dpi, bb.y1*resolution/fig.dpi
-                    
-        x_delta = x_offset + dc_offset + x_gap
-        y_delta = y_offset
-        x_vals = np.arange(0,len(ecg[leadName])*step,step) + x_offset + dc_offset + x_gap
-        y_vals = ecg[leadName] + y_offset
+
+        x_delta, y_delta = start_plot_xy_delta_dict[leadName]
+        x_delta = x_offset + dc_offset + x_gap if x_delta in (None,"None") else x_delta
+        y_delta = y_offset if y_delta in (None,"None") else y_delta
+        x_vals = np.arange(0,len(ecg[leadName])*step,step) + x_delta
+        y_vals = ecg[leadName] + y_delta
 
         t1 = ax.plot(x_vals, y_vals, linewidth=line_width, color=color_line) # plot ecg signal
         current_lead_ds["start_plot_xy_delta"] = [x_delta, y_delta]
-
+        
         if (bbox):
             renderer1 = fig.canvas.get_renderer()
             transf = ax.transData.inverted()
@@ -338,12 +380,11 @@ def ecg_plot(
             current_lead_ds["lead_bounding_box"] = box_dict
         
         st, add_st = start_index, 0
-        configs_format_by = {4:'format_4_by_3', 2:'format_2_by_6'}
-        if columns in configs_format_by.keys():
-            format_by_name = configs_format_by[columns]
-            for _i, _v in enumerate(configs[format_by_name]):
+        if columns in CONFIGS_FORMAT_BY.keys():
+            format_by_name = CONFIGS_FORMAT_BY[columns]
+            for _i, _v in enumerate(configs_leads_format[format_by_name]):
                 if leadName in _v:
-                    add_st = int(_i*sample_rate*configs['paper_len']/columns)
+                    add_st = int(_i*sample_rate*configs_paper_len/columns)
         st = st + add_st
                 
         current_lead_ds["start_sample"] = st
@@ -451,7 +492,6 @@ def ecg_plot(
         leads_ds.append(current_lead_ds)
 
 
-
     head, tail = os.path.split(rec_file_name)
     rec_file_name = os.path.join(output_dir, tail)
 
@@ -531,3 +571,75 @@ def ecg_plot(
 
     return x_grid_dots,y_grid_dots
        
+
+def ecg_plot(ecg, 
+        configs,
+        sample_rate, 
+        columns,
+        rec_file_name,
+        output_dir,
+        resolution,
+        pad_inches,
+        lead_index,
+        full_mode,
+        store_text_bbox,
+        full_header_file,
+        units          = '',
+        papersize      = '',
+        x_gap          = standard_values['x_gap'],
+        y_gap          = standard_values['y_gap'],
+        display_factor = standard_values['display_factor'],
+        line_width     = standard_values['line_width'],
+        title          = '',  
+        style          = None,
+        row_height     = standard_values['row_height'],
+        show_lead_name = True,
+        show_grid      = False,
+        show_dc_pulse  = False,
+        y_grid = 0,
+        x_grid = 0,
+        standard_colours = False,
+        bbox = False,
+        print_txt=False,
+        json_dict=dict(),
+        start_index=-1,
+        store_configs=0,
+        lead_length_in_seconds=10,
+        start_plot_xy_delta_dict=None,
+        **kwargs
+        ):
+    _d = get_params_from_configs(configs)
+    _d.setdefault("ecg", ecg)
+    _d.setdefault("sample_rate", sample_rate)
+    _d.setdefault("columns", columns)
+    _d.setdefault("rec_file_name", rec_file_name)
+    _d.setdefault("output_dir", output_dir)
+    _d.setdefault("resolution", resolution)
+    _d.setdefault("pad_inches", pad_inches)
+    _d.setdefault("lead_index", lead_index)
+    _d.setdefault("full_mode", full_mode)
+    _d.setdefault("store_text_bbox", store_text_bbox)
+    _d.setdefault("full_header_file", full_header_file)
+    _d.setdefault("units", units)
+    _d.setdefault("papersize", papersize)
+    _d.setdefault("x_gap", x_gap)
+    _d.setdefault("y_gap", y_gap)
+    _d.setdefault("display_factor", display_factor)
+    _d.setdefault("line_width", line_width)
+    _d.setdefault("title", title)
+    _d.setdefault("style", style)
+    _d.setdefault("row_height", row_height)
+    _d.setdefault("show_lead_name", show_lead_name)
+    _d.setdefault("show_grid", show_grid)
+    _d.setdefault("show_dc_pulse", show_dc_pulse)
+    _d.setdefault("y_grid", y_grid)
+    _d.setdefault("x_grid", x_grid)
+    _d.setdefault("standard_colours", standard_colours)
+    _d.setdefault("bbox", bbox)
+    _d.setdefault("print_txt", print_txt)
+    _d.setdefault("json_dict", json_dict)
+    _d.setdefault("start_index", start_index)
+    _d.setdefault("store_configs", store_configs)
+    _d.setdefault("lead_length_in_seconds", lead_length_in_seconds)
+    _d.setdefault("start_plot_xy_delta_dict", start_plot_xy_delta_dict)
+    return _ecg_plot(**_d)
