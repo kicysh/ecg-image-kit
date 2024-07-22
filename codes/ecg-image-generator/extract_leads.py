@@ -25,7 +25,7 @@ def get_paper_ecg(input_file,header_file,output_directory, seed, add_dc_pulse,ad
     full_leads = get_leads(full_header)
     num_full_leads = len(full_leads)
 
-    # update configs
+    # update configs: start_plot_xy_delta
     if configs.get("start_plot_xy_delta_from_json") == True:
         _d = {}
         json_file_path = os.path.splitext(input_file)[0]+".json"
@@ -34,6 +34,21 @@ def get_paper_ecg(input_file,header_file,output_directory, seed, add_dc_pulse,ad
         for _lead in j_load["leads"]:
             _d[_lead["lead_name"]] = _lead["start_plot_xy_delta"]
         configs["start_plot_xy_delta_dict"] = _d
+    # update configs: resolution
+    if configs.get("resolution_from_json") == True:
+        _d = {}
+        json_file_path = os.path.splitext(input_file)[0]+".json"
+        with open(json_file_path, "r") as f:
+            j_load = json.load(f)
+        configs["resolution"] = j_load['resolution']
+    # update configs: columns
+    if configs.get("columns_from_json") == True:
+        _d = {}
+        json_file_path = os.path.splitext(input_file)[0]+".json"
+        with open(json_file_path, "r") as f:
+            j_load = json.load(f)
+        configs["columns"] = j_load['number_of_columns_in_image']
+        columns = j_load['number_of_columns_in_image']
 
     # Update the header file
     full_lines = full_header.split('\n')
