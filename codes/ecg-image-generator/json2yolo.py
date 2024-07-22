@@ -30,11 +30,13 @@ def convert_yolo(json_path,label_path, names:dict):
     for lead in json_load["leads"]:
         name_format = lead["lead_name"]+ "_{}"
         for _type in ["text","lead"]:
-            y_min, x_min, y_max, x_max = lead[_type+"_bounding_box"]["0"] + lead[_type+"_bounding_box"]["2"]
-            x1, y1, x2, y2 = convert_label(x_min,y_min, x_max, y_max, width, height)
-            name_key = name_format.format(_type) if _type == "text" else _type
-            name_v = names[name_key]
-            write_list.append("{} {} {} {} {}".format(name_v, x1, y1, x2, y2))
+            bbox_names = [k for k in lead.keys() if k.startswith(_type+"_bounding_box")]
+            for bbox_name in bbox_names:
+                y_min, x_min, y_max, x_max = lead[bbox_name]["0"] + lead[bbox_name]["2"]
+                x1, y1, x2, y2 = convert_label(x_min,y_min, x_max, y_max, width, height)
+                name_key = name_format.format(_type) if _type == "text" else _type
+                name_v = names[name_key]
+                write_list.append("{} {} {} {} {}".format(name_v, x1, y1, x2, y2))
 
     with open(label_path ,"w") as f:
         write_list.append("\n")
