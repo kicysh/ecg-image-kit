@@ -68,16 +68,16 @@ START_PLOT_XY_DELTA_DICT = {"I":[None, None],
                             "full_mode":[None, None]}
 
 CONFIGS_KEYS = ["sample_rate", "columns", "rec_file_name", "output_dir", 
-                "resolution", "pad_inches","lead_index", "full_mode",
-                "store_text_bbox","full_header_file","show_grid", "papersize",
+                "resolution", "pad_inches","lead_index", "full_mode","show_lead_name",
+                "store_text_bbox","full_header_file","show_grid","show_dc_pulse", "papersize",
                 "x_gap","y_gap", "line_width", "title", "start_plot_xy_delta_dict",
                 "start_plot_xy_delta_from_json", "is_random_start_plot_xy_delta",
                 "is_random_start_text_plot_xy_delta", "is_random_text_rotation",
-                "is_random_font", "not_show_leads"]
+                "is_random_font","is_random_text_size", "not_show_leads", "num_lead_name"]
 
 CONFIGS_FORMAT_BY = {4:'format_4_by_3', 2:'format_2_by_6'}
 
-FONT_NAME = [fm.FontProperties(fname=x).get_name() for x in fm.findSystemFonts()]
+FONT_NAMES = [fm.FontProperties(fname=x).get_name() for x in fm.findSystemFonts()]
 
 def inches_to_dots(value,resolution):
     return (value * resolution)
@@ -137,6 +137,8 @@ def _ecg_plot(
         is_random_start_text_plot_xy_delta = False,
         is_random_text_rotation=False,
         is_random_font=False,
+        is_random_text_size = False,
+        num_lead_name = 1,
         not_show_leads=[],
         **kwargs
         ):
@@ -301,31 +303,36 @@ def _ecg_plot(
 
         #Print lead name at .5 ( or 5 mm distance) from plot
         if(show_lead_name):
-            t1 = ax.text(x_offset + x_gap + dc_offset if not is_random_start_text_plot_xy_delta else random.uniform(0.1,width), 
-                    y_offset-lead_name_offset - 0.2 if not is_random_start_text_plot_xy_delta else random.uniform(0.1,height*2), 
-                    leadName, 
-                    rotation=0 if not is_random_text_rotation else random.uniform(-30,30),
-                    fontsize=lead_fontsize,
-                    fontname=FONT_NAME[0] if not is_random_font else random.choice(FONT_NAME))
-            
-            if (store_text_bbox):
-                renderer1 = fig.canvas.get_renderer()
-                transf = ax.transData.inverted()
-                bb = t1.get_window_extent()    
-                x1 = bb.x0*resolution/fig.dpi      
-                y1 = bb.y0*resolution/fig.dpi   
-                x2 = bb.x1*resolution/fig.dpi     
-                y2 = bb.y1*resolution/fig.dpi    
-                box_dict = dict()
-                x1 = int(x1)
-                y1 = int(y1)
-                x2 = int(x2)
-                y2 = int(y2)
-                box_dict[0] = [round(json_dict['height'] - y2, 2), round(x1, 2)]
-                box_dict[1] = [round(json_dict['height'] - y2, 2), round(x2, 2)]
-                box_dict[2] = [round(json_dict['height'] - y1, 2), round(x2, 2)]
-                box_dict[3] = [round(json_dict['height'] - y1, 2), round(x1, 2)]
-                current_lead_ds["text_bounding_box"] = box_dict
+            for _cnt in range(num_lead_name):
+                t1 = ax.text(x_offset + x_gap + dc_offset if not is_random_start_text_plot_xy_delta else random.uniform(0.1,width), 
+                        y_offset-lead_name_offset - 0.2 if not is_random_start_text_plot_xy_delta else random.uniform(0.1,height*2), 
+                        leadName, 
+                        rotation=0 if not is_random_text_rotation else random.uniform(-30,30),
+                        fontsize=lead_fontsize if not is_random_text_size else random.randint(8,14),
+                        fontname=FONT_NAMES[0] if not is_random_font else random.choice(FONT_NAMES))
+                
+                if (store_text_bbox):
+                    renderer1 = fig.canvas.get_renderer()
+                    transf = ax.transData.inverted()
+                    bb = t1.get_window_extent()    
+                    x1 = bb.x0*resolution/fig.dpi      
+                    y1 = bb.y0*resolution/fig.dpi   
+                    x2 = bb.x1*resolution/fig.dpi     
+                    y2 = bb.y1*resolution/fig.dpi    
+                    box_dict = dict()
+                    x1 = int(x1)
+                    y1 = int(y1)
+                    x2 = int(x2)
+                    y2 = int(y2)
+                    box_dict[0] = [round(json_dict['height'] - y2, 2), round(x1, 2)]
+                    box_dict[1] = [round(json_dict['height'] - y2, 2), round(x2, 2)]
+                    box_dict[2] = [round(json_dict['height'] - y1, 2), round(x2, 2)]
+                    box_dict[3] = [round(json_dict['height'] - y1, 2), round(x1, 2)]
+                    if _cnt ==0:
+                        current_lead_ds["text_bounding_box"] = box_dict
+                    else:
+                        current_lead_ds["text_bounding_box_{}".format(_cnt)] = box_dict
+
 
         current_lead_ds["lead_name"] = leadName
 
@@ -625,6 +632,8 @@ def ecg_plot(ecg,
         is_random_start_text_plot_xy_delta=False,
         is_random_text_rotation=False,
         is_random_font=False,
+        is_random_text_size=False,
+        num_lead_name = 1,
         not_show_leads=[],
         **kwargs
         ):
@@ -666,5 +675,7 @@ def ecg_plot(ecg,
     _d.setdefault("is_random_start_text_plot_xy_delta", is_random_start_text_plot_xy_delta)
     _d.setdefault("is_random_text_rotation", is_random_text_rotation)
     _d.setdefault("is_random_font", is_random_font)
+    _d.setdefault("is_random_text_size", is_random_text_size)
     _d.setdefault("not_show_leads", not_show_leads)
+    _d.setdefault("num_lead_name",num_lead_name)
     return _ecg_plot(**_d)
